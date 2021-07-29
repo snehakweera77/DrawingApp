@@ -1,10 +1,14 @@
 package com.example.drawingapp
 
+import android.app.Activity
 import android.app.Dialog
+import android.content.Intent
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.View
+import android.widget.Gallery
 import android.widget.ImageButton
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -16,8 +20,8 @@ import kotlinx.android.synthetic.main.dialog_brush_size.*
 class MainActivity : AppCompatActivity() {
     private var mImageButtonCurrentPaint: ImageButton? = null
         override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+            super.onCreate(savedInstanceState)
+            setContentView(R.layout.activity_main)
 
             mImageButtonCurrentPaint = ll_paint_colors.get(1) as ImageButton
             mImageButtonCurrentPaint!!.setImageDrawable(
@@ -26,19 +30,43 @@ class MainActivity : AppCompatActivity() {
                     R.drawable.pallet_pressed
                 )
             )
-        drawing_view.setSizeForBrush(20.toFloat())
-        ib_brush.setOnClickListener{
-            showBrushSizeChooserDialog()
-        }
+            drawing_view.setSizeForBrush(20.toFloat())
+            ib_brush.setOnClickListener {
+                showBrushSizeChooserDialog()
+            }
             ib_gallery.setOnClickListener{
                 if(isReadStorageAllowed()){
-                    //run our code
+                    val pickPhotoIntent = Intent(Intent.ACTION_PICK,
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                    startActivityForResult(pickPhotoIntent, GALLERY)
+
                 }else {
                     requestStoragePermission()
                 }
             }
-    }
+        }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if(resultCode == Activity.RESULT_OK){
+            if(requestCode == GALLERY){
+                try {
+                    if(data!!.data != null){
+                        iv_background.visibility = View.VISIBLE
+                        iv_background.setImageURI(data.data)
+                    }else{
+                        Toast.makeText(
+                            this,
+                            "Error in parsing image or its corrupted",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }catch (e: Exception){
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
     private fun showBrushSizeChooserDialog(){
         val brushDialog = Dialog(this)
         brushDialog.setContentView(R.layout.dialog_brush_size)
@@ -113,5 +141,6 @@ class MainActivity : AppCompatActivity() {
     }
     companion object{
         private const val STORAGE_PERMISSION_CODE = 1
+        private const val GALLERY = 2
     }
 }

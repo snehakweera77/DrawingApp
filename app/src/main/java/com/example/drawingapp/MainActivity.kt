@@ -4,6 +4,9 @@ import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -23,7 +26,7 @@ class MainActivity : AppCompatActivity() {
             super.onCreate(savedInstanceState)
             setContentView(R.layout.activity_main)
 
-            mImageButtonCurrentPaint = ll_paint_colors.get(1) as ImageButton
+            mImageButtonCurrentPaint = ll_paint_colors[1] as ImageButton
             mImageButtonCurrentPaint!!.setImageDrawable(
                 ContextCompat.getDrawable(
                     this,
@@ -90,6 +93,18 @@ class MainActivity : AppCompatActivity() {
             brushDialog.dismiss()
         }
         brushDialog.show()
+    }
+    private fun getBitMapFromView(view: View) : Bitmap {
+        val returnedBitmap = Bitmap.createBitmap(view.width,
+            view.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(returnedBitmap)
+        val bgDrawable = view.background
+        if(bgDrawable != null)
+            bgDrawable.draw(canvas)
+        else
+            canvas.drawColor(Color.WHITE)
+        view.draw(canvas)
+        return returnedBitmap
     }
     fun paintClicked(view: View){
         if(view !== mImageButtonCurrentPaint){

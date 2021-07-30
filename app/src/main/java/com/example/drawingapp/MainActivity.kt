@@ -34,6 +34,9 @@ class MainActivity : AppCompatActivity() {
             ib_brush.setOnClickListener {
                 showBrushSizeChooserDialog()
             }
+            ib_undo.setOnClickListener {
+                drawing_view.onClickUndo()
+            }
             ib_gallery.setOnClickListener{
                 if(isReadStorageAllowed()){
                     val pickPhotoIntent = Intent(Intent.ACTION_PICK,

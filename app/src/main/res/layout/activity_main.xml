@@ -171,7 +171,7 @@
             android:layout_margin="5dp"
             android:contentDescription="save image"
             android:scaleType="fitXY"
-            android:src="@drawable/ic_brush"
+            android:src="@drawable/ic_save"
             />
     </LinearLayout>
 

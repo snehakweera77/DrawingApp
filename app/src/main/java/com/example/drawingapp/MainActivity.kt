@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
@@ -19,6 +20,9 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.get
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_brush_size.*
+import java.io.ByteArrayOutputStream
+import java.io.File
+import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity() {
     private var mImageButtonCurrentPaint: ImageButton? = null
@@ -36,6 +40,14 @@ class MainActivity : AppCompatActivity() {
             drawing_view.setSizeForBrush(20.toFloat())
             ib_brush.setOnClickListener {
                 showBrushSizeChooserDialog()
+            }
+            ib_save.setOnClickListener{
+                if(isReadStorageAllowed()){
+                    BitmapAsyncTask(getBitMapFromView(fl_drawing_view_container))
+                        .execute()
+                }else{
+                    requestStoragePermission()
+                }
             }
             ib_undo.setOnClickListener {
                 drawing_view.onClickUndo()
@@ -156,6 +168,50 @@ class MainActivity : AppCompatActivity() {
     private fun isReadStorageAllowed():Boolean{
         val result = ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_EXTERNAL_STORAGE)
         return result == PackageManager.PERMISSION_GRANTED
+    }
+
+    private inner class BitmapAsyncTask(val mBitmap: Bitmap):
+        AsyncTask<Any, Void, String>(){
+        override fun doInBackground(vararg p0: Any?): String {
+            var result = ""
+            if (mBitmap != null){
+                try {
+                    val bytes = ByteArrayOutputStream()
+                    mBitmap.compress(Bitmap.CompressFormat.PNG,
+                        90, bytes)
+                    val f = File(externalCacheDir!!.absoluteFile.toString()
+                            + File.separator + "KidDrawingApp_"
+                            + System.currentTimeMillis() / 1000 + ".png")
+                    val fos = FileOutputStream(f)
+                    fos.write(bytes.toByteArray())
+                    fos.close()
+                    result = f.absolutePath
+                } catch (e: Exception){
+                    result = ""
+                    e.printStackTrace()
+                }
+            }
+
+            return result
+        }
+
+        override fun onPostExecute(result: String?) {
+            super.onPostExecute(result)
+            if (!result!!.isEmpty()){
+                Toast.makeText(
+                    this@MainActivity,
+                    "File saved successfully :$result",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }else{
+                Toast.makeText(
+                    this@MainActivity,
+                    "Something went wrong while saving the file",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
     }
     companion object{
         private const val STORAGE_PERMISSION_CODE = 1

@@ -7,14 +7,15 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.media.MediaScannerConnection
+import android.net.Uri
 import android.os.AsyncTask
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
-import android.widget.Gallery
 import android.widget.ImageButton
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.get
@@ -173,10 +174,12 @@ class MainActivity : AppCompatActivity() {
     private inner class BitmapAsyncTask(val mBitmap: Bitmap):
         AsyncTask<Any, Void, String>(){
         private lateinit var mProgressDialog: Dialog
+        private lateinit var file: File
         override fun onPreExecute() {
             super.onPreExecute()
             showProgressDialog()
         }
+
         override fun doInBackground(vararg p0: Any?): String {
             var result = ""
             if (mBitmap != null){
@@ -184,13 +187,13 @@ class MainActivity : AppCompatActivity() {
                     val bytes = ByteArrayOutputStream()
                     mBitmap.compress(Bitmap.CompressFormat.PNG,
                         90, bytes)
-                    val f = File(externalCacheDir!!.absoluteFile.toString()
+                    file = File(externalCacheDir!!.absoluteFile.toString()
                             + File.separator + "KidDrawingApp_"
                             + System.currentTimeMillis() / 1000 + ".png")
-                    val fos = FileOutputStream(f)
+                    val fos = FileOutputStream(file)
                     fos.write(bytes.toByteArray())
                     fos.close()
-                    result = f.absolutePath
+                    result = file.absolutePath
                 } catch (e: Exception){
                     result = ""
                     e.printStackTrace()
@@ -215,6 +218,17 @@ class MainActivity : AppCompatActivity() {
                     "Something went wrong while saving the file",
                     Toast.LENGTH_SHORT
                 ).show()
+            }
+            MediaScannerConnection.scanFile(this@MainActivity, arrayOf(result), null){
+                    path, uri -> val shareIntent = Intent()
+                shareIntent.action = Intent.ACTION_SEND
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri)
+                shareIntent.type = "image/png"
+                startActivity(
+                    Intent.createChooser(
+                        shareIntent, "Share"
+                    )
+                )
             }
         }
         private fun showProgressDialog(){
